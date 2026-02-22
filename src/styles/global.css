@@ -34,36 +34,36 @@
   --transition-fast: 150ms ease;
 }
 
-/* Dark theme — Dracula-inspired */
+/* Dark theme (default) */
 [data-theme="dark"] {
-  --color-bg: #282a36;
-  --color-surface: #2d2f3d;
-  --color-border: #44475a;
-  --color-text: #f8f8f2;
-  --color-text-muted: #8b8fa8;
-  --color-accent: #bd93f9;
-  --color-accent-dim: rgba(189, 147, 249, 0.12);
-  --color-success: #50fa7b;
-  --color-error: #ff5555;
-  --color-warning: #f1fa8c;
-  --color-success-dim: rgba(80, 250, 123, 0.12);
-  --color-error-dim: rgba(255, 85, 85, 0.12);
+  --color-bg: #0d1117;
+  --color-surface: #161b22;
+  --color-border: #30363d;
+  --color-text: #e6edf3;
+  --color-text-muted: #8b949e;
+  --color-accent: #58a6ff;
+  --color-accent-dim: rgba(88, 166, 255, 0.1);
+  --color-success: #3fb950;
+  --color-error: #f85149;
+  --color-warning: #d29922;
+  --color-success-dim: rgba(63, 185, 80, 0.15);
+  --color-error-dim: rgba(248, 81, 73, 0.15);
 }
 
-/* Light theme — Gruvbox-inspired */
+/* Light theme */
 [data-theme="light"] {
-  --color-bg: #fbf1c7;
-  --color-surface: #f2e5bc;
-  --color-border: #d5c4a1;
-  --color-text: #3c3836;
-  --color-text-muted: #7c6f64;
-  --color-accent: #8f3f71;
-  --color-accent-dim: rgba(143, 63, 113, 0.1);
-  --color-success: #79740e;
-  --color-error: #cc241d;
-  --color-warning: #b57614;
-  --color-success-dim: rgba(121, 116, 14, 0.15);
-  --color-error-dim: rgba(204, 36, 29, 0.12);
+  --color-bg: #ffffff;
+  --color-surface: #f6f8fa;
+  --color-border: #d0d7de;
+  --color-text: #1f2328;
+  --color-text-muted: #656d76;
+  --color-accent: #0969da;
+  --color-accent-dim: rgba(9, 105, 218, 0.1);
+  --color-success: #1a7f37;
+  --color-error: #cf222e;
+  --color-warning: #9a6700;
+  --color-success-dim: rgba(26, 127, 55, 0.15);
+  --color-error-dim: rgba(207, 34, 46, 0.15);
 }
 
 /* Reset */

@@ -8,34 +8,27 @@ course: async-javascript
 
 Implement the `Symbol.asyncIterator` protocol for cursor-based pagination.
 
-## Functions
-
-### `paginate(fetchPage)`
+## `paginate(fetchPage)`
 
 Turn a cursor-based page fetcher into a lazy `AsyncIterable` that yields individual items. Pages are fetched on demand — the next page is not requested until all items from the current page are consumed.
 
+The `fetchPage` function has this signature:
+
 ```ts
 type Page<T> = { items: T[]; nextCursor?: string };
-
-const fetchPage = async (cursor?: string) => {
-  if (!cursor) return { items: [1, 2], nextCursor: 'p2' };
-  return { items: [3] };
-};
-
-for await (const n of paginate(fetchPage)) {
-  console.log(n); // 1, 2, 3
-}
+type FetchPage<T> = (cursor?: string) => Promise<Page<T>>;
 ```
 
-### `collect(iter)`
+When `nextCursor` is undefined, there are no more pages.
+
+## `collect(iter)`
 
 Consume an entire `AsyncIterable` into an array.
 
-### `asyncMap(iter, fn)`
+## `asyncMap(iter, fn)`
 
-Lazily transform each item from an `AsyncIterable` using an async function.
+Lazily transform each item from an `AsyncIterable` using an async mapping function. Should not eagerly consume the source.
 
-```ts
-const doubled = asyncMap(paginate(fetchPage), async (n) => n * 2);
-await collect(doubled); // [2, 4, 6]
-```
+## Hint
+
+An object is async-iterable if it has a `[Symbol.asyncIterator]()` method that returns `{ next(): Promise<{ value, done }> }`.

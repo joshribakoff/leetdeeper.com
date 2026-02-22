@@ -1,0 +1,26 @@
+---
+title: Promise.all
+difficulty: medium
+course: async-javascript
+---
+
+# Promise.all
+
+Implement `Promise.all` from scratch.
+
+## Signature
+
+```ts
+function promiseAll<T>(promises: Promise<T>[]): Promise<T[]>
+```
+
+## Behavior
+
+- Takes an array of Promises
+- Resolves with an array of results, **preserving order**
+- If any Promise rejects, reject with that error immediately
+- An empty array should resolve with `[]`
+
+## Hint
+
+You'll need to track how many promises have resolved and where each result belongs.

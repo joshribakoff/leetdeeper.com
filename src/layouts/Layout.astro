@@ -39,6 +39,23 @@ const { title, description = 'Interactive coding challenges', fullWidth = false 
         text-decoration: none;
       }
 
+      .site-nav {
+        display: flex;
+        align-items: center;
+        gap: var(--space-4);
+      }
+
+      .site-nav > a {
+        color: var(--color-text-muted);
+        text-decoration: none;
+        font-size: var(--text-sm);
+        transition: color var(--transition-fast);
+      }
+
+      .site-nav > a:hover {
+        color: var(--color-accent);
+      }
+
       .site-header .theme-toggle {
         display: flex;
         align-items: center;
@@ -82,7 +99,10 @@ const { title, description = 'Interactive coding challenges', fullWidth = false 
 
     <header class="site-header">
       <h1><a href="/">leetdeeper</a></h1>
-      <ThemeToggle class="theme-toggle" />
+      <nav class="site-nav">
+        <a href="/challenges/">Challenges</a>
+        <ThemeToggle class="theme-toggle" />
+      </nav>
     </header>
 
     <main class:list={['site-main', { 'full-width': fullWidth }]}>

@@ -2,7 +2,9 @@
 title: Async JavaScript
 challenges:
   - two-sum
-  - promise-basics
+  - delay
+  - fetch-with-retry
+  - promise-all
   - async-iterators
   - concurrent-task-runner
 ---

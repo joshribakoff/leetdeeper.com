@@ -147,7 +147,7 @@ export default function ChallengeWorkspace({ slug, starterCode, testCode }: Prop
     <div ref={containerRef} style={styles.container} data-testid="editor">
       {/* Description panel */}
       <div style={{ ...styles.panel, width: `${splitPct}%` }}>
-        <div style={styles.panelContent} dangerouslySetInnerHTML={{ __html: descriptionHtml }} />
+        <div className="prose" style={styles.panelContent} dangerouslySetInnerHTML={{ __html: descriptionHtml }} />
       </div>
 
       {/* Resize handle */}

@@ -32,7 +32,7 @@ const { prev, next } = getNeighbors(challengeSlugs, challenge.id);
 <Layout title={`${challenge.data.title} — leetdeeper`} fullWidth>
   <div class="challenge-nav">
     {prev ? <a href={`/challenge/${prev}/`}>&larr; Previous</a> : <span />}
-    <a href="/">All Challenges</a>
+    <a href="/challenges/">All Challenges</a>
     {next ? <a href={`/challenge/${next}/`}>Next &rarr;</a> : <span />}
   </div>
 
@@ -54,13 +54,13 @@ const { prev, next } = getNeighbors(challengeSlugs, challenge.id);
   .challenge-nav {
     display: flex;
     justify-content: space-between;
-    padding: var(--space-3) var(--space-4);
-    border-bottom: 1px solid var(--color-border);
-    font-size: var(--text-sm);
+    padding: var(--space-2) var(--space-4);
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
   }
 
-  .challenge-nav a { color: var(--color-accent); text-decoration: none; }
-  .challenge-nav a:hover { text-decoration: underline; }
+  .challenge-nav a { color: var(--color-text-muted); text-decoration: none; }
+  .challenge-nav a:hover { color: var(--color-accent); }
 
   /* Hide serialized props from client:only before hydration */
   .workspace-loading astro-island > code { display: none; }

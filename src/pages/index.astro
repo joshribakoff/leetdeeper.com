@@ -1,117 +1,187 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { getCollection } from 'astro:content';
-
-const courses = await getCollection('courses');
-const challenges = await getCollection('challenges');
-
-// Build a lookup: slug → challenge
-const challengeMap = new Map(challenges.map((c) => [c.id, c]));
 ---
 
-<Layout title="leetdeeper — Interactive Coding Challenges">
-  <h1>Courses</h1>
-  {courses.map((course) => (
-    <section class="course-section">
-      <h2>{course.data.title}</h2>
-      <ol class="challenge-list">
-        {course.data.challenges.map((slug) => {
-          const challenge = challengeMap.get(slug);
-          if (!challenge) return null;
-          return (
-            <li>
-              <a href={`/challenge/${slug}/`}>
-                <span class="challenge-title">{challenge.data.title}</span>
-                <span class={`difficulty ${challenge.data.difficulty}`}>{challenge.data.difficulty}</span>
-              </a>
-            </li>
-          );
-        })}
-      </ol>
-    </section>
-  ))}
+<Layout title="leetdeeper — Go deeper than algorithms" description="Interactive coding challenges focused on async patterns, concurrency primitives, and the building blocks of real systems. Re-implement the tools you rely on.">
+  <div class="hero">
+    <h1 class="hero-headline">Stop grinding<br />algorithm puzzles.</h1>
+    <p class="hero-sub">Start understanding your tools.</p>
+    <p class="hero-body">
+      Interactive challenges where you re-implement the libraries and patterns
+      you use every day — promises, concurrency limiters, retry logic, event
+      emitters — so you understand the failure modes they solve.
+    </p>
+    <a href="/challenges/" class="cta-btn">Start Practicing &rarr;</a>
+  </div>
 
-  <script is:inline>
-    // Mark completed challenges on the index page
-    const completed = JSON.parse(localStorage.getItem('leetdeeper:completed') ?? '[]');
-    document.querySelectorAll('.challenge-list a').forEach((a) => {
-      const slug = a.getAttribute('href')?.replace('/challenge/', '').replace(/\/$/, '');
-      if (slug && completed.includes(slug)) {
-        a.classList.add('completed');
-      }
-    });
-  </script>
+  <section class="value-grid">
+    <div class="value-card">
+      <h3>What top labs actually ask</h3>
+      <p>
+        The best engineering orgs stopped asking you to invert binary trees.
+        They want you to build a worker queue with concurrency limits, implement
+        <code>Promise.all</code> from scratch, and demonstrate you understand
+        runtime behavior — not just surface-level syntax.
+      </p>
+    </div>
+    <div class="value-card">
+      <h3>Where AI-generated code breaks</h3>
+      <p>
+        LLMs produce async code that looks correct but has subtle bugs around
+        execution ordering, error propagation, and concurrency. If you&rsquo;ve
+        never built these patterns yourself, you won&rsquo;t catch them in
+        review — and they&rsquo;ll ship.
+      </p>
+    </div>
+    <div class="value-card">
+      <h3>Combat skill atrophy</h3>
+      <p>
+        The more you delegate to AI, the less you exercise the muscle of
+        understanding what your code does. Spend 20 minutes on a challenge, hit
+        the edge cases, keep your fundamentals sharp.
+      </p>
+    </div>
+  </section>
+
+  <section class="how-section">
+    <h2>How it works</h2>
+    <p>
+      Each challenge drops you into a code editor with a problem description
+      and a test suite. Write the implementation, run the tests, iterate until
+      everything passes — including the edge cases you didn&rsquo;t think of.
+      No accounts. No setup. Just you and the code.
+    </p>
+    <div class="example-challenges">
+      <span class="example-tag">Implement Promise.all</span>
+      <span class="example-tag">Build a concurrency limiter</span>
+      <span class="example-tag">Write retry with backoff</span>
+      <span class="example-tag">Async iterators from scratch</span>
+    </div>
+  </section>
+
+  <section class="bottom-cta">
+    <p class="bottom-cta-text">Ready to go deeper?</p>
+    <a href="/challenges/" class="cta-btn">Browse Challenges &rarr;</a>
+  </section>
 </Layout>
 
 <style>
-  h1 { margin-bottom: var(--space-8); }
-
-  .course-section {
-    margin-bottom: var(--space-8);
+  .hero {
+    text-align: center;
+    padding: var(--space-16) 0 var(--space-12);
   }
 
-  .course-section h2 {
+  .hero-headline {
+    font-size: clamp(2rem, 6vw, 3.5rem);
+    font-weight: var(--font-bold);
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    color: var(--color-text);
+  }
+
+  .hero-sub {
+    font-size: clamp(1.25rem, 3vw, 1.75rem);
+    color: var(--color-accent);
+    font-weight: var(--font-semibold);
+    margin-top: var(--space-3);
+    margin-bottom: var(--space-6);
+  }
+
+  .hero-body {
+    max-width: 600px;
+    margin: 0 auto var(--space-8);
+    color: var(--color-text-muted);
+    font-size: var(--text-base);
+    line-height: var(--leading-relaxed);
+  }
+
+  .cta-btn {
+    display: inline-block;
+    padding: var(--space-3) var(--space-6);
+    background: var(--color-accent);
+    color: #fff;
+    border-radius: var(--radius-md);
+    font-weight: var(--font-semibold);
+    font-size: var(--text-base);
+    text-decoration: none;
+    transition: opacity var(--transition-fast);
+  }
+
+  .cta-btn:hover {
+    opacity: 0.85;
+    text-decoration: none;
+  }
+
+  .value-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: var(--space-6);
+    padding: var(--space-8) 0;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .value-card h3 {
+    font-size: var(--text-base);
+    font-weight: var(--font-semibold);
+    margin-bottom: var(--space-2);
+    color: var(--color-text);
+  }
+
+  .value-card p {
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+    line-height: var(--leading-relaxed);
+  }
+
+  .value-card code {
+    font-size: 0.85em;
+  }
+
+  .how-section {
+    padding: var(--space-8) 0;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .how-section h2 {
     font-size: var(--text-xl);
+    font-weight: var(--font-semibold);
+    margin-bottom: var(--space-3);
+  }
+
+  .how-section > p {
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+    line-height: var(--leading-relaxed);
+    max-width: 640px;
+    margin-bottom: var(--space-6);
+  }
+
+  .example-challenges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
+  .example-tag {
+    font-size: var(--text-xs);
+    font-family: var(--font-mono);
+    padding: var(--space-1) var(--space-3);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    color: var(--color-text-muted);
+  }
+
+  .bottom-cta {
+    padding: var(--space-12) 0 var(--space-8);
+    border-top: 1px solid var(--color-border);
+    text-align: center;
+  }
+
+  .bottom-cta-text {
+    font-size: var(--text-lg);
+    font-weight: var(--font-semibold);
     margin-bottom: var(--space-4);
     color: var(--color-text);
   }
-
-  .challenge-list {
-    list-style: none;
-    padding: 0;
-    counter-reset: challenge;
-  }
-
-  .challenge-list li {
-    counter-increment: challenge;
-  }
-
-  .challenge-list a {
-    display: flex;
-    align-items: center;
-    gap: var(--space-3);
-    padding: var(--space-3) var(--space-4);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    margin-bottom: var(--space-2);
-    text-decoration: none;
-    transition: border-color var(--transition-fast);
-  }
-
-  .challenge-list a::before {
-    content: counter(challenge) ".";
-    color: var(--color-text-muted);
-    font-weight: var(--font-semibold);
-    min-width: 2ch;
-  }
-
-  .challenge-list a:hover { border-color: var(--color-accent); }
-
-  .challenge-list a.completed {
-    border-left: 3px solid var(--color-success);
-  }
-
-  .challenge-list a.completed::after {
-    content: "\2713";
-    color: var(--color-success);
-    margin-left: auto;
-    font-weight: bold;
-  }
-
-  .challenge-title {
-    flex: 1;
-    color: var(--color-text);
-  }
-
-  .difficulty {
-    font-size: var(--text-xs);
-    padding: var(--space-1) var(--space-2);
-    border-radius: var(--radius-sm);
-    text-transform: uppercase;
-    font-weight: var(--font-semibold);
-  }
-
-  .difficulty.easy { background: var(--color-success-dim); color: var(--color-success); }
-  .difficulty.medium { background: rgba(210, 153, 34, 0.15); color: var(--color-warning); }
-  .difficulty.hard { background: var(--color-error-dim); color: var(--color-error); }
 </style>

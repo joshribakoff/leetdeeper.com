@@ -1,0 +1,24 @@
+---
+title: Delay
+difficulty: easy
+course: async-javascript
+---
+
+# Delay
+
+Write a function that returns a Promise which resolves after a given number of milliseconds.
+
+## Signature
+
+```ts
+function delay(ms: number): Promise<void>
+```
+
+## Constraints
+
+- The returned Promise must resolve with `undefined`
+- Must wait at least `ms` milliseconds before resolving
+
+## Hint
+
+Look into `setTimeout` and how to wrap callback-based APIs with `new Promise()`.

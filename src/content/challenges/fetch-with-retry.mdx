@@ -1,0 +1,25 @@
+---
+title: Fetch with Retry
+difficulty: medium
+course: async-javascript
+---
+
+# Fetch with Retry
+
+Write a function that calls an async operation and retries on failure, up to a maximum number of attempts.
+
+## Signature
+
+```ts
+function fetchWithRetry<T>(fn: () => Promise<T>, retries: number): Promise<T>
+```
+
+## Behavior
+
+- Call `fn()`. If it resolves, return the result.
+- If it rejects, retry — up to `retries` total attempts.
+- If all attempts fail, throw the last error.
+
+## Hint
+
+Think about a loop that catches errors and decrements a counter.

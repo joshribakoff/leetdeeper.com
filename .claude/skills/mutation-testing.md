@@ -1,6 +1,6 @@
 # Mutation Testing
 
-**What:** Verify each Playwright test catches its target regression by inserting a bug, confirming the test fails, then reverting.
+**What:** Verify each test catches its target regression by inserting a bug, confirming the test fails, then reverting.
 
 **CRITICAL: Commit clean before starting.** Never run mutation testing with uncommitted changes — you risk accidentally committing bugs.
 
@@ -9,7 +9,7 @@
 1. `git stash` or commit all work
 2. For each test, identify what source code mutation would break it
 3. Insert the mutation
-4. Run `npx playwright test --grep "test name"`
+4. Run the relevant test (see `system-tests.md` or `user-tests.md` for how)
 5. Confirm it fails
 6. Revert the mutation
 7. Verify `git diff --stat` shows nothing (no leftover mutations)
@@ -18,19 +18,19 @@
 
 **Always mark mutations with `MUTANT` in ALL CAPS** so they're impossible to miss:
 
-```astro
+```html
 <!-- MUTANT: removed difficulty badge -->
 ```
 ```tsx
 {/* MUTANT: removed Run Tests button */}
 ```
 ```ts
-const completed = JSON.parse(localStorage.getItem('MUTANT:wrong-key') ?? '[]');
+localStorage.getItem('MUTANT:wrong-key')
 ```
 
 This ensures:
 - `git diff` immediately shows the mutation
-- `grep -r MUTANT` finds any forgotten mutations
+- `grep -r MUTANT src/ tests/` finds any forgotten mutations
 - You never lose track of what was changed
 
 ## After mutation testing

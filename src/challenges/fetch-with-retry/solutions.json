@@ -1,0 +1,25 @@
+[
+  {
+    "key": "optimal",
+    "label": "Loop with try/catch",
+    "approach": "Use a for-loop that attempts the function up to `retries` times. Each iteration wraps the call in try/catch — on success return immediately, on failure save the error and try again.",
+    "complexity": "O(retries)",
+    "steps": [
+      "Loop from 0 to retries.",
+      "In each iteration, try to await fn() and return the result.",
+      "If fn() throws, store the error in lastError and continue to the next iteration.",
+      "After the loop exhausts all attempts, throw lastError."
+    ]
+  },
+  {
+    "key": "recursive",
+    "label": "Recursive",
+    "approach": "Try the function once. If it fails and retries remain, call fetchWithRetry again with retries − 1. The call stack unwinds naturally when retries are exhausted.",
+    "complexity": "O(retries)",
+    "steps": [
+      "Try to await fn() and return the result.",
+      "If it throws and retries ≤ 1, rethrow — no more attempts.",
+      "Otherwise, recursively call fetchWithRetry(fn, retries − 1)."
+    ]
+  }
+]

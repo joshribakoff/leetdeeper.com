@@ -1,0 +1,13 @@
+[
+  {
+    "key": "optimal",
+    "label": "setTimeout + Promise",
+    "approach": "Wrap setTimeout in a Promise constructor. The Promise resolves after the specified milliseconds, giving you an awaitable delay.",
+    "complexity": "O(1)",
+    "steps": [
+      "Return a new Promise.",
+      "Inside the executor, call setTimeout with the resolve callback and the ms value.",
+      "The promise stays pending until the timer fires, then resolves with undefined."
+    ]
+  }
+]

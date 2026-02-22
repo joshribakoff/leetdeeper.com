@@ -45,7 +45,8 @@ test.describe('Challenge page', () => {
   test('renders challenge content', async ({ page }) => {
     await page.goto('/challenge/two-sum/');
     await expect(page.getByRole('heading', { name: 'Two Sum' })).toBeVisible();
-    await expect(page.getByText('All Challenges')).toBeVisible();
+    // Header nav link to challenges
+    await expect(page.locator('.site-nav a[href="/challenges/"]')).toBeVisible();
   });
 
   test('Monaco editor loads', async ({ page }) => {
@@ -62,7 +63,7 @@ test.describe('Challenge page', () => {
   test('running tests shows results', async ({ page }) => {
     await page.goto('/challenge/two-sum/');
     await page.getByRole('button', { name: 'Run Tests' }).click();
-    await expect(page.getByText(/\d+\/\d+ passed|All tests passed/)).toBeVisible();
+    await expect(page.getByText(/\d+\/\d+ passed|All tests passed/).first()).toBeVisible();
   });
 
   test('editor theme syncs with site theme', async ({ page }) => {

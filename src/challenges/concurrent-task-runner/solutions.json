@@ -1,0 +1,15 @@
+[
+  {
+    "key": "optimal",
+    "label": "Pool with slot reuse",
+    "approach": "Spawn N worker coroutines (where N = concurrency). Each worker pulls the next task from a shared index, runs it, and loops until no tasks remain. Results are stored by original index to preserve order.",
+    "complexity": "O(n)",
+    "steps": [
+      "Create a results array and a shared next-index counter.",
+      "Define a worker function that loops: grab the next index, run that task, store the result.",
+      "Spawn min(concurrency, tasks.length) workers — each runs independently.",
+      "await Promise.all(workers) — all tasks complete when every worker is done.",
+      "Return the results array (already in the correct order by index)."
+    ]
+  }
+]

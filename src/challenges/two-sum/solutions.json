@@ -1,0 +1,25 @@
+[
+  {
+    "key": "optimal",
+    "label": "Optimal (Hash Map)",
+    "approach": "Instead of checking every pair, use a hash map to remember numbers we've seen. For each number, compute the complement (target − current) and check if it's already in the map.",
+    "complexity": "O(n)",
+    "steps": [
+      "Create an empty hash map to store {value → index}.",
+      "Iterate through the array. For each number, compute complement = target − nums[i].",
+      "If the complement exists in the map, return [map[complement], i].",
+      "Otherwise, store nums[i] → i in the map and continue."
+    ]
+  },
+  {
+    "key": "brute-force",
+    "label": "Brute Force",
+    "approach": "Check every possible pair of numbers using two nested loops. Simple to understand but slow for large inputs.",
+    "complexity": "O(n²)",
+    "steps": [
+      "For each element at index i, loop through every element at index j > i.",
+      "If nums[i] + nums[j] equals the target, return [i, j].",
+      "This checks n×(n−1)/2 pairs in the worst case."
+    ]
+  }
+]

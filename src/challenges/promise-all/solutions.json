@@ -1,0 +1,15 @@
+[
+  {
+    "key": "optimal",
+    "label": "Counter-based",
+    "approach": "Attach a .then() to each promise, filling a results array by index. A counter tracks how many have resolved — when it hits zero, resolve the outer promise with the full array.",
+    "complexity": "O(n)",
+    "steps": [
+      "Handle the empty array edge case — resolve immediately with [].",
+      "Create a results array of the same length and a remaining counter.",
+      "For each promise, attach .then() that stores the value at the correct index and decrements remaining.",
+      "When remaining hits 0, resolve the outer promise with the results array.",
+      "Attach .catch() (via reject) so the first rejection immediately rejects the outer promise."
+    ]
+  }
+]

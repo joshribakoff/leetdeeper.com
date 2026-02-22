@@ -3,6 +3,7 @@ import Layout from '../../layouts/Layout.astro';
 import { getCollection, render } from 'astro:content';
 import { getNeighbors } from 'sailkit/packages/compass';
 import ChallengeWorkspace from '../../components/ChallengeWorkspace';
+import { validateManifest, type SolutionWithCode } from '../../lib/solutions-schema';
 
 export async function getStaticPaths() {
   const challenges = await getCollection('challenges');
@@ -22,6 +23,22 @@ const testModules = import.meta.glob('/src/challenges/*/tests.ts', { query: '?ra
 const starterCode = starterModules[`/src/challenges/${challenge.id}/starter.ts`] as string;
 const testCode = testModules[`/src/challenges/${challenge.id}/tests.ts`] as string;
 
+// Load solutions (optional per challenge)
+const solutionManifests = import.meta.glob('/src/challenges/*/solutions.json', { eager: true });
+const solutionCodeModules = import.meta.glob('/src/challenges/*/solutions/*.ts', { query: '?raw', import: 'default', eager: true });
+
+let solutions: SolutionWithCode[] = [];
+const manifestPath = `/src/challenges/${challenge.id}/solutions.json`;
+if (solutionManifests[manifestPath]) {
+  const manifest = validateManifest((solutionManifests[manifestPath] as any).default, challenge.id);
+  solutions = manifest.map((meta) => {
+    const codePath = `/src/challenges/${challenge.id}/solutions/${meta.key}.ts`;
+    const code = solutionCodeModules[codePath] as string;
+    if (!code) throw new Error(`Missing solution file: ${codePath}`);
+    return { ...meta, code };
+  });
+}
+
 // Prev/next via compass
 const courses = await getCollection('courses');
 const course = courses.find((c) => c.id === challenge.data.course);
@@ -31,9 +48,12 @@ const { prev, next } = getNeighbors(challengeSlugs, challenge.id);
 
 <Layout title={`${challenge.data.title} — leetdeeper`} fullWidth>
   <div class="challenge-nav">
-    {prev ? <a href={`/challenge/${prev}/`}>&larr; Previous</a> : <span />}
-    <a href="/challenges/">All Challenges</a>
-    {next ? <a href={`/challenge/${next}/`}>Next &rarr;</a> : <span />}
+    {prev
+      ? <a href={`/challenge/${prev}/`}>&larr; Previous</a>
+      : <span class="disabled">&larr; Previous</span>}
+    {next
+      ? <a href={`/challenge/${next}/`}>Next &rarr;</a>
+      : <span class="disabled">Next &rarr;</span>}
   </div>
 
   <!-- Server-rendered description for SEO; React component reads via DOM -->
@@ -46,6 +66,7 @@ const { prev, next } = getNeighbors(challengeSlugs, challenge.id);
       slug={challenge.id}
       starterCode={starterCode}
       testCode={testCode}
+      solutions={solutions}
     />
   </div>
 </Layout>
@@ -61,6 +82,7 @@ const { prev, next } = getNeighbors(challengeSlugs, challenge.id);
 
   .challenge-nav a { color: var(--color-text-muted); text-decoration: none; }
   .challenge-nav a:hover { color: var(--color-accent); }
+  .challenge-nav .disabled { opacity: 0.3; }
 
   /* Hide serialized props from client:only before hydration */
   .workspace-loading astro-island > code { display: none; }

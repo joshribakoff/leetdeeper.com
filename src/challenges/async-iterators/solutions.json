@@ -1,0 +1,14 @@
+[
+  {
+    "key": "optimal",
+    "label": "Async Generators",
+    "approach": "Use async generator functions (async function*) for paginate and asyncMap. The yield keyword naturally makes iteration lazy — pages aren't fetched until the consumer asks for the next item.",
+    "complexity": "O(n)",
+    "steps": [
+      "paginate: Loop while there's a cursor. Fetch a page, yield each item, then advance the cursor.",
+      "collect: Use for-await-of to drain an async iterable into an array.",
+      "asyncMap: for-await over the input, apply the transform fn, yield the result.",
+      "Laziness is automatic — the generator pauses at each yield until .next() is called."
+    ]
+  }
+]

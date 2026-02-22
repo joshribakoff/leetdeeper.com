@@ -4,11 +4,13 @@ import Editor from '@monaco-editor/react';
 import type { TestResult } from '../lib/test-harness';
 import type { WorkerMessage } from '../lib/test-worker';
 import TestWorker from '../lib/test-worker?worker';
+import type { SolutionWithCode } from '../lib/solutions-schema';
 
 interface Props {
   slug: string;
   starterCode: string;
   testCode: string;
+  solutions?: SolutionWithCode[];
 }
 
 const MIN_PANEL = 300;
@@ -26,12 +28,15 @@ function useMonacoTheme() {
   return theme;
 }
 
-export default function ChallengeWorkspace({ slug, starterCode, testCode }: Props) {
+export default function ChallengeWorkspace({ slug, starterCode, testCode, solutions = [] }: Props) {
   const [descriptionHtml, setDescriptionHtml] = useState('');
   const [results, setResults] = useState<TestResult[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [running, setRunning] = useState(false);
+  const [leftTab, setLeftTab] = useState<'description' | 'solutions'>('description');
+  const [activeSolution, setActiveSolution] = useState(0);
   const monacoTheme = useMonacoTheme();
+  const editorRef = useRef<any>(null);
   const [splitPct, setSplitPct] = useState(() => {
     const saved = localStorage.getItem(LS_SPLIT_KEY);
     return saved ? parseFloat(saved) : 40;
@@ -145,9 +150,88 @@ export default function ChallengeWorkspace({ slug, starterCode, testCode }: Prop
 
   return (
     <div ref={containerRef} style={styles.container} data-testid="editor">
-      {/* Description panel */}
-      <div style={{ ...styles.panel, width: `${splitPct}%` }}>
-        <div className="prose" style={styles.panelContent} dangerouslySetInnerHTML={{ __html: descriptionHtml }} />
+      {/* Left panel */}
+      <div style={{ ...styles.panel, width: `${splitPct}%`, display: 'flex', flexDirection: 'column' }}>
+        {solutions.length > 0 && (
+          <div style={styles.tabBar}>
+            <button
+              style={{ ...styles.tab, ...(leftTab === 'description' ? styles.tabActive : {}) }}
+              onClick={() => setLeftTab('description')}
+            >Description</button>
+            <button
+              style={{ ...styles.tab, ...(leftTab === 'solutions' ? styles.tabActive : {}) }}
+              onClick={() => setLeftTab('solutions')}
+            >Solutions</button>
+          </div>
+        )}
+        {leftTab === 'description' ? (
+          <div className="prose" style={{ ...styles.panelContent, flex: 1, overflow: 'auto' }} dangerouslySetInnerHTML={{ __html: descriptionHtml }} />
+        ) : (
+          <div style={{ ...styles.panelContent, flex: 1, overflow: 'auto' }}>
+            <div style={styles.pillBar}>
+              {solutions.map((s, i) => (
+                <button
+                  key={s.key}
+                  style={{ ...styles.pill, ...(activeSolution === i ? styles.pillActive : {}) }}
+                  onClick={() => setActiveSolution(i)}
+                >{s.label}</button>
+              ))}
+            </div>
+            {solutions[activeSolution] && (
+              <>
+                <p style={styles.approachText}>
+                  {solutions[activeSolution].approach}
+                  {solutions[activeSolution].complexity && (
+                    <span style={styles.complexityBadge}>{solutions[activeSolution].complexity}</span>
+                  )}
+                </p>
+                {solutions[activeSolution].steps && (
+                  <ol style={styles.stepsList}>
+                    {solutions[activeSolution].steps!.map((step, i) => (
+                      <li key={i} style={styles.stepItem}>{step}</li>
+                    ))}
+                  </ol>
+                )}
+                <div style={styles.codeEditorWrap}>
+                  <Editor
+                    language="typescript"
+                    value={solutions[activeSolution].code}
+                    theme={monacoTheme}
+                    options={{
+                      readOnly: true,
+                      minimap: { enabled: false },
+                      fontSize: 13,
+                      fontFamily: "'Fira Code', monospace",
+                      lineNumbers: 'off',
+                      scrollBeyondLastLine: false,
+                      automaticLayout: true,
+                      domReadOnly: true,
+                      padding: { top: 12, bottom: 12 },
+                      renderLineHighlight: 'none',
+                      scrollbar: { vertical: 'hidden', horizontal: 'auto' },
+                      overviewRulerLanes: 0,
+                      folding: false,
+                      glyphMargin: false,
+                    }}
+                  />
+                </div>
+                <button
+                  style={styles.loadButton}
+                  onClick={() => {
+                    const current = codeRef.current;
+                    if (current !== starterCode && current !== solutions[activeSolution].code) {
+                      if (!window.confirm('This will replace your current code in the editor. Continue?')) return;
+                    }
+                    const code = solutions[activeSolution].code;
+                    editorRef.current?.setValue(code);
+                    codeRef.current = code;
+                    localStorage.setItem(LS_KEY_PREFIX + slug, code);
+                  }}
+                >Load into Editor</button>
+              </>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Resize handle */}
@@ -171,6 +255,10 @@ export default function ChallengeWorkspace({ slug, starterCode, testCode }: Prop
             defaultValue={codeRef.current}
             onChange={onCodeChange}
             theme={monacoTheme}
+            onMount={(editor) => {
+              editorRef.current = editor;
+              (window as any).__leetdeeperEditor = editor;
+            }}
             options={{
               minimap: { enabled: false },
               fontSize: 14,
@@ -190,13 +278,47 @@ export default function ChallengeWorkspace({ slug, starterCode, testCode }: Prop
               <div style={{ ...styles.resultsSummary, color: allPass ? 'var(--color-success)' : 'var(--color-error)' }}>
                 {allPass ? 'All tests passed!' : `${results.filter((r) => r.pass).length}/${results.length} passed`}
               </div>
-              {results.map((r, i) => (
-                <div key={i} style={{ ...styles.resultRow, background: r.pass ? 'var(--color-success-dim)' : 'var(--color-error-dim)' }}>
-                  <span>{r.pass ? '\u2713' : '\u2717'}</span>
-                  <span style={{ flex: 1 }}>{r.name}</span>
-                  {r.error && <span style={styles.resultError}>{r.error}</span>}
-                </div>
-              ))}
+              {(() => {
+                // Split results into basic (shown in full) and extended (only show failures)
+                const basic = results.filter((r) => !r.name.startsWith('Extended'));
+                const extended = results.filter((r) => r.name.startsWith('Extended'));
+                const extendedFails = extended.filter((r) => !r.pass);
+                const extendedAllPass = extendedFails.length === 0;
+
+                return (
+                  <>
+                    {basic.map((r, i) => {
+                      const testName = r.name.includes(' > ') ? r.name.split(' > ').slice(1).join(' > ') : r.name;
+                      return (
+                        <div key={i} style={{ ...styles.resultRow, background: r.pass ? 'var(--color-success-dim)' : 'var(--color-error-dim)' }}>
+                          <span>{r.pass ? '\u2713' : '\u2717'}</span>
+                          <span style={{ flex: 1 }}>{testName}</span>
+                          {r.error && <span style={styles.resultError}>{r.error}</span>}
+                        </div>
+                      );
+                    })}
+                    {extended.length > 0 && (
+                      <>
+                        <div style={styles.groupHeader}>
+                          Extended — {extendedAllPass
+                            ? `${extended.length}/${extended.length} passed`
+                            : `${extended.length - extendedFails.length}/${extended.length} passed`}
+                        </div>
+                        {extendedFails.map((r, i) => {
+                          const testName = r.name.includes(' > ') ? r.name.split(' > ').slice(1).join(' > ') : r.name;
+                          return (
+                            <div key={`ext-${i}`} style={{ ...styles.resultRow, background: 'var(--color-error-dim)' }}>
+                              <span>{'\u2717'}</span>
+                              <span style={{ flex: 1 }}>{testName}</span>
+                              {r.error && <span style={styles.resultError}>{r.error}</span>}
+                            </div>
+                          );
+                        })}
+                      </>
+                    )}
+                  </>
+                );
+              })()}
             </div>
           )}
           {!results && !error && <div style={styles.placeholder}>Click "Run Tests" to check your solution</div>}
@@ -281,8 +403,99 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 13,
     fontFamily: "'Fira Code', monospace",
   },
+  groupHeader: {
+    fontSize: 11,
+    fontWeight: 600,
+    color: 'var(--color-text-muted)',
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.05em',
+    padding: '8px 8px 4px',
+    marginTop: 4,
+  },
   placeholder: {
     color: 'var(--color-text-muted)',
+    fontSize: 13,
+  },
+  tabBar: {
+    display: 'flex',
+    gap: 0,
+    borderBottom: '1px solid var(--color-border)',
+    background: 'var(--color-surface)',
+    flexShrink: 0,
+  },
+  tab: {
+    padding: '8px 16px',
+    border: 'none',
+    background: 'transparent',
+    cursor: 'pointer',
+    fontSize: 13,
+    fontWeight: 500,
+    color: 'var(--color-text-muted)',
+    borderBottom: '2px solid transparent',
+  },
+  tabActive: {
+    color: 'var(--color-accent)',
+    borderBottom: '2px solid var(--color-accent)',
+  },
+  pillBar: {
+    display: 'flex',
+    gap: 8,
+    flexWrap: 'wrap' as const,
+    marginBottom: 16,
+  },
+  pill: {
+    padding: '4px 12px',
+    borderRadius: 16,
+    border: '1px solid var(--color-border)',
+    background: 'transparent',
+    cursor: 'pointer',
+    fontSize: 12,
+    color: 'var(--color-text-muted)',
+  },
+  pillActive: {
+    background: 'var(--color-accent)',
+    color: '#fff',
+    borderColor: 'var(--color-accent)',
+  },
+  approachText: {
+    fontSize: 13,
+    color: 'var(--color-text-muted)',
+    marginBottom: 12,
+    lineHeight: 1.5,
+  },
+  complexityBadge: {
+    marginLeft: 8,
+    padding: '2px 8px',
+    borderRadius: 4,
+    background: 'var(--color-surface)',
+    fontSize: 11,
+    fontFamily: "'Fira Code', monospace",
+  },
+  stepsList: {
+    margin: '0 0 16px 0',
+    paddingLeft: 20,
+    fontSize: 13,
+    lineHeight: 1.7,
+    color: 'var(--color-text)',
+  },
+  stepItem: {
+    marginBottom: 4,
+  },
+  codeEditorWrap: {
+    borderRadius: 6,
+    overflow: 'hidden',
+    border: '1px solid var(--color-border)',
+    height: 250,
+  },
+  loadButton: {
+    marginTop: 12,
+    padding: '6px 16px',
+    background: 'var(--color-accent)',
+    color: '#fff',
+    border: 'none',
+    borderRadius: 4,
+    cursor: 'pointer',
+    fontWeight: 600,
     fontSize: 13,
   },
 };

@@ -1,0 +1,71 @@
+import { delay, fetchWithRetry, promiseAll } from './solution';
+
+describe('delay', () => {
+  test('resolves after ms', async () => {
+    const start = Date.now();
+    await delay(50);
+    const elapsed = Date.now() - start;
+    expect(elapsed >= 40).toBe(true);
+  });
+
+  test('resolves with undefined', async () => {
+    const result = await delay(10);
+    expect(result).toBe(undefined);
+  });
+});
+
+describe('fetchWithRetry', () => {
+  test('returns on first success', async () => {
+    const result = await fetchWithRetry(() => Promise.resolve('ok'), 3);
+    expect(result).toBe('ok');
+  });
+
+  test('retries on failure then succeeds', async () => {
+    let attempts = 0;
+    const result = await fetchWithRetry(() => {
+      if (++attempts < 3) throw new Error('fail');
+      return Promise.resolve('ok');
+    }, 3);
+    expect(result).toBe('ok');
+  });
+
+  test('throws after exhausting retries', async () => {
+    let threw = false;
+    try {
+      await fetchWithRetry(() => Promise.reject(new Error('fail')), 2);
+    } catch {
+      threw = true;
+    }
+    expect(threw).toBe(true);
+  });
+});
+
+describe('promiseAll', () => {
+  test('resolves with all values in order', async () => {
+    const result = await promiseAll([
+      Promise.resolve(1),
+      Promise.resolve(2),
+      Promise.resolve(3),
+    ]);
+    expect(result).toEqual([1, 2, 3]);
+  });
+
+  test('rejects with first rejection', async () => {
+    let threw = false;
+    try {
+      await promiseAll([
+        Promise.resolve(1),
+        Promise.reject(new Error('fail')),
+        Promise.resolve(3),
+      ]);
+    } catch {
+      threw = true;
+    }
+    expect(threw).toBe(true);
+  });
+
+  test('handles empty array', async () => {
+    const result = await promiseAll([]);
+    expect(result).toEqual([]);
+  });
+});

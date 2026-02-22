@@ -1,0 +1,37 @@
+---
+title: Concurrent Task Runner
+difficulty: hard
+course: async-javascript
+---
+
+# Concurrent Task Runner
+
+Build a task runner that processes N async tasks with a concurrency limit of K.
+
+## Function
+
+### `runTasks(tasks, concurrency)`
+
+Takes an array of task functions (each returns a Promise) and a concurrency limit. Runs at most `concurrency` tasks simultaneously. Returns a Promise that resolves with all results in order.
+
+```ts
+const tasks = [
+  () => delay(100).then(() => 'a'),
+  () => delay(50).then(() => 'b'),
+  () => delay(75).then(() => 'c'),
+];
+
+const results = await runTasks(tasks, 2);
+// results === ['a', 'b', 'c']
+```
+
+## Requirements
+
+- At most `concurrency` tasks run at any time
+- Results array preserves the original task order
+- If a task rejects, the entire run rejects with that error
+- Tasks are started as slots become available (no waiting for all in a batch)
+
+## Hint
+
+Think of a pool of workers pulling from a queue. Each worker grabs the next task as soon as it finishes the current one.

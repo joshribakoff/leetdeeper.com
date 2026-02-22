@@ -1,0 +1,96 @@
+---
+import '../styles/global.css';
+import { initScript } from 'sailkit/packages/lantern';
+import ThemeToggle from 'sailkit/packages/lantern/ThemeToggle.astro';
+
+interface Props {
+  title: string;
+  description?: string;
+  fullWidth?: boolean;
+}
+
+const { title, description = 'Interactive coding challenges', fullWidth = false } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description} />
+    <title>{title}</title>
+    <style is:global>
+      .site-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: var(--space-4) var(--space-6);
+        border-bottom: 1px solid var(--color-border);
+        background: var(--color-surface);
+      }
+
+      .site-header h1 {
+        font-size: var(--text-lg);
+        font-weight: var(--font-bold);
+      }
+
+      .site-header h1 a {
+        color: var(--color-text);
+        text-decoration: none;
+      }
+
+      .site-header .theme-toggle {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        background: var(--color-bg);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-md);
+        padding: var(--space-1) var(--space-3);
+        color: var(--color-text-muted);
+        font-size: var(--text-sm);
+        cursor: pointer;
+        transition: border-color var(--transition-fast);
+      }
+
+      .site-header .theme-toggle:hover {
+        border-color: var(--color-accent);
+      }
+
+      .site-main {
+        padding: var(--space-8) var(--space-6);
+        max-width: 960px;
+        margin: 0 auto;
+      }
+
+      .site-main.full-width {
+        max-width: none;
+        padding: 0;
+      }
+
+      .site-footer {
+        padding: var(--space-4) var(--space-6);
+        border-top: 1px solid var(--color-border);
+        text-align: center;
+        font-size: var(--text-xs);
+        color: var(--color-text-muted);
+      }
+    </style>
+  </head>
+  <body>
+    <script is:inline set:html={initScript} />
+
+    <header class="site-header">
+      <h1><a href="/">leetdeeper</a></h1>
+      <ThemeToggle class="theme-toggle" />
+    </header>
+
+    <main class:list={['site-main', { 'full-width': fullWidth }]}>
+      <slot />
+    </main>
+
+    <footer class="site-footer">
+      leetdeeper — Interactive coding challenges
+    </footer>
+  </body>
+</html>

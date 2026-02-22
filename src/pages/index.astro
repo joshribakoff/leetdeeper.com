@@ -1,0 +1,117 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { getCollection } from 'astro:content';
+
+const courses = await getCollection('courses');
+const challenges = await getCollection('challenges');
+
+// Build a lookup: slug → challenge
+const challengeMap = new Map(challenges.map((c) => [c.id, c]));
+---
+
+<Layout title="leetdeeper — Interactive Coding Challenges">
+  <h1>Courses</h1>
+  {courses.map((course) => (
+    <section class="course-section">
+      <h2>{course.data.title}</h2>
+      <ol class="challenge-list">
+        {course.data.challenges.map((slug) => {
+          const challenge = challengeMap.get(slug);
+          if (!challenge) return null;
+          return (
+            <li>
+              <a href={`/challenge/${slug}/`}>
+                <span class="challenge-title">{challenge.data.title}</span>
+                <span class={`difficulty ${challenge.data.difficulty}`}>{challenge.data.difficulty}</span>
+              </a>
+            </li>
+          );
+        })}
+      </ol>
+    </section>
+  ))}
+
+  <script is:inline>
+    // Mark completed challenges on the index page
+    const completed = JSON.parse(localStorage.getItem('leetdeeper:completed') ?? '[]');
+    document.querySelectorAll('.challenge-list a').forEach((a) => {
+      const slug = a.getAttribute('href')?.replace('/challenge/', '').replace(/\/$/, '');
+      if (slug && completed.includes(slug)) {
+        a.classList.add('completed');
+      }
+    });
+  </script>
+</Layout>
+
+<style>
+  h1 { margin-bottom: var(--space-8); }
+
+  .course-section {
+    margin-bottom: var(--space-8);
+  }
+
+  .course-section h2 {
+    font-size: var(--text-xl);
+    margin-bottom: var(--space-4);
+    color: var(--color-text);
+  }
+
+  .challenge-list {
+    list-style: none;
+    padding: 0;
+    counter-reset: challenge;
+  }
+
+  .challenge-list li {
+    counter-increment: challenge;
+  }
+
+  .challenge-list a {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--space-2);
+    text-decoration: none;
+    transition: border-color var(--transition-fast);
+  }
+
+  .challenge-list a::before {
+    content: counter(challenge) ".";
+    color: var(--color-text-muted);
+    font-weight: var(--font-semibold);
+    min-width: 2ch;
+  }
+
+  .challenge-list a:hover { border-color: var(--color-accent); }
+
+  .challenge-list a.completed {
+    border-left: 3px solid var(--color-success);
+  }
+
+  .challenge-list a.completed::after {
+    content: "\2713";
+    color: var(--color-success);
+    margin-left: auto;
+    font-weight: bold;
+  }
+
+  .challenge-title {
+    flex: 1;
+    color: var(--color-text);
+  }
+
+  .difficulty {
+    font-size: var(--text-xs);
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-sm);
+    text-transform: uppercase;
+    font-weight: var(--font-semibold);
+  }
+
+  .difficulty.easy { background: var(--color-success-dim); color: var(--color-success); }
+  .difficulty.medium { background: rgba(210, 153, 34, 0.15); color: var(--color-warning); }
+  .difficulty.hard { background: var(--color-error-dim); color: var(--color-error); }
+</style>

@@ -1,0 +1,44 @@
+---
+title: Promise Basics
+difficulty: medium
+course: async-javascript
+---
+
+# Promise Basics
+
+Implement three utility functions that demonstrate core Promise patterns.
+
+## Functions
+
+### `delay(ms)`
+
+Return a Promise that resolves after `ms` milliseconds.
+
+```ts
+await delay(100); // resolves after 100ms
+```
+
+### `fetchWithRetry(fn, retries)`
+
+Call `fn()` which returns a Promise. If it rejects, retry up to `retries` times. Return the first successful result or throw the last error.
+
+```ts
+let attempts = 0;
+const result = await fetchWithRetry(() => {
+  if (++attempts < 3) throw new Error('fail');
+  return Promise.resolve('ok');
+}, 3);
+// result === 'ok'
+```
+
+### `promiseAll(promises)`
+
+Implement `Promise.all` from scratch. Takes an array of Promises, resolves with an array of results in order, or rejects with the first rejection.
+
+```ts
+const [a, b] = await promiseAll([
+  Promise.resolve(1),
+  Promise.resolve(2),
+]);
+// a === 1, b === 2
+```

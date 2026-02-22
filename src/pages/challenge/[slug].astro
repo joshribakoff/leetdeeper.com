@@ -1,0 +1,61 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getCollection, render } from 'astro:content';
+import { getNeighbors } from 'sailkit/packages/compass';
+import ChallengeWorkspace from '../../components/ChallengeWorkspace';
+
+export async function getStaticPaths() {
+  const challenges = await getCollection('challenges');
+  return challenges.map((challenge) => ({
+    params: { slug: challenge.id },
+    props: { challenge },
+  }));
+}
+
+const { challenge } = Astro.props;
+const { Content } = await render(challenge);
+
+// Import starter code and test code as raw strings
+const starterModules = import.meta.glob('/src/challenges/*/starter.ts', { query: '?raw', import: 'default', eager: true });
+const testModules = import.meta.glob('/src/challenges/*/tests.ts', { query: '?raw', import: 'default', eager: true });
+
+const starterCode = starterModules[`/src/challenges/${challenge.id}/starter.ts`] as string;
+const testCode = testModules[`/src/challenges/${challenge.id}/tests.ts`] as string;
+
+// Prev/next via compass
+const courses = await getCollection('courses');
+const course = courses.find((c) => c.id === challenge.data.course);
+const challengeSlugs = course?.data.challenges ?? [];
+const { prev, next } = getNeighbors(challengeSlugs, challenge.id);
+---
+
+<Layout title={`${challenge.data.title} — leetdeeper`} fullWidth>
+  <div class="challenge-nav">
+    {prev ? <a href={`/challenge/${prev}/`}>&larr; Previous</a> : <span />}
+    <a href="/">All Challenges</a>
+    {next ? <a href={`/challenge/${next}/`}>Next &rarr;</a> : <span />}
+  </div>
+
+  <!-- Server-rendered description for SEO; React component reads via DOM -->
+  <template id="challenge-description"><Content /></template>
+
+  <ChallengeWorkspace
+    client:only="react"
+    slug={challenge.id}
+    starterCode={starterCode}
+    testCode={testCode}
+  />
+</Layout>
+
+<style>
+  .challenge-nav {
+    display: flex;
+    justify-content: space-between;
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 1px solid var(--color-border);
+    font-size: var(--text-sm);
+  }
+
+  .challenge-nav a { color: var(--color-accent); text-decoration: none; }
+  .challenge-nav a:hover { text-decoration: underline; }
+</style>

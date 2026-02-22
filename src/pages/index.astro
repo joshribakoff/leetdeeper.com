@@ -4,6 +4,7 @@ import Layout from '../layouts/Layout.astro';
 
 <Layout title="leetdeeper — Go deeper than algorithms" description="Interactive coding challenges focused on async patterns, concurrency primitives, and the building blocks of real systems. Re-implement the tools you rely on.">
   <div class="hero">
+    <img src="/logo.png" alt="LeetDeeper" class="hero-logo" />
     <h1 class="hero-headline">Stop grinding<br />algorithm puzzles.</h1>
     <p class="hero-sub">Start understanding your tools.</p>
     <p class="hero-body">
@@ -66,6 +67,12 @@ import Layout from '../layouts/Layout.astro';
 </Layout>
 
 <style>
+  .hero-logo {
+    width: 280px;
+    height: auto;
+    margin-bottom: var(--space-6);
+  }
+
   .hero {
     text-align: center;
     padding: var(--space-16) 0 var(--space-12);

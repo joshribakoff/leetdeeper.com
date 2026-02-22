@@ -15,11 +15,23 @@ const MIN_PANEL = 300;
 const LS_KEY_PREFIX = 'leetdeeper:code:';
 const LS_SPLIT_KEY = 'leetdeeper:split';
 
+function useMonacoTheme() {
+  const getTheme = () => document.documentElement.getAttribute('data-theme') === 'light' ? 'vs' : 'vs-dark';
+  const [theme, setTheme] = useState(getTheme);
+  useEffect(() => {
+    const obs = new MutationObserver(() => setTheme(getTheme()));
+    obs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    return () => obs.disconnect();
+  }, []);
+  return theme;
+}
+
 export default function ChallengeWorkspace({ slug, starterCode, testCode }: Props) {
   const [descriptionHtml, setDescriptionHtml] = useState('');
   const [results, setResults] = useState<TestResult[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [running, setRunning] = useState(false);
+  const monacoTheme = useMonacoTheme();
   const [splitPct, setSplitPct] = useState(() => {
     const saved = localStorage.getItem(LS_SPLIT_KEY);
     return saved ? parseFloat(saved) : 40;
@@ -78,6 +90,12 @@ export default function ChallengeWorkspace({ slug, starterCode, testCode }: Prop
       worker.terminate();
     };
 
+    worker.onerror = (e) => {
+      setError(e.message || 'Worker crashed unexpectedly');
+      setRunning(false);
+      worker.terminate();
+    };
+
     worker.postMessage({ type: 'run', userCode: codeRef.current, testCode } satisfies WorkerMessage);
   }, [slug, testCode]);
 
@@ -126,7 +144,7 @@ export default function ChallengeWorkspace({ slug, starterCode, testCode }: Prop
   const allPass = results?.every((r) => r.pass);
 
   return (
-    <div ref={containerRef} style={styles.container}>
+    <div ref={containerRef} style={styles.container} data-testid="editor">
       {/* Description panel */}
       <div style={{ ...styles.panel, width: `${splitPct}%` }}>
         <div style={styles.panelContent} dangerouslySetInnerHTML={{ __html: descriptionHtml }} />
@@ -138,8 +156,11 @@ export default function ChallengeWorkspace({ slug, starterCode, testCode }: Prop
       {/* Editor panel */}
       <div style={{ ...styles.panel, width: `${100 - splitPct}%`, display: 'flex', flexDirection: 'column' }}>
         <div style={styles.toolbar}>
-          <button onClick={runTests} disabled={running} style={styles.runButton}>
-            {running ? 'Running...' : 'Run Tests'}
+          <button onClick={runTests} disabled={running} style={{
+            ...styles.runButton,
+            ...(running ? { opacity: 0.7, cursor: 'wait' } : {}),
+          }}>
+            {running ? 'Running\u2026' : 'Run Tests'}
           </button>
           <span style={styles.shortcutHint}>Ctrl+Enter</span>
         </div>
@@ -149,7 +170,7 @@ export default function ChallengeWorkspace({ slug, starterCode, testCode }: Prop
             defaultLanguage="typescript"
             defaultValue={codeRef.current}
             onChange={onCodeChange}
-            theme="vs-dark"
+            theme={monacoTheme}
             options={{
               minimap: { enabled: false },
               fontSize: 14,

@@ -34,19 +34,32 @@ test.describe('Challenge page', () => {
 
   test('Monaco editor loads', async ({ page }) => {
     await page.goto('/challenge/two-sum/');
-    await expect(page.getByText('TODO: implement')).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId('editor')).toBeVisible();
+    await expect(page.getByText('// TODO: implement', { exact: true })).toBeVisible();
   });
 
   test('Run Tests button visible', async ({ page }) => {
     await page.goto('/challenge/two-sum/');
-    await expect(page.getByRole('button', { name: 'Run Tests' })).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole('button', { name: 'Run Tests' })).toBeVisible();
   });
 
-  test.skip('running tests shows results', async ({ page }) => {
-    // TODO: fix test-worker exports issue, then unskip
+  test('running tests shows results', async ({ page }) => {
     await page.goto('/challenge/two-sum/');
     await page.getByRole('button', { name: 'Run Tests' }).click();
-    await expect(page.getByText(/\d+\/\d+ passed|All tests passed/)).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText(/\d+\/\d+ passed|All tests passed/)).toBeVisible();
+  });
+
+  test('editor theme syncs with site theme', async ({ page }) => {
+    await page.goto('/challenge/two-sum/');
+    await expect(page.getByTestId('editor')).toBeVisible();
+
+    // Toggle to light mode
+    await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'light'));
+    await expect(page.locator('.monaco-editor')).toHaveClass(/vs\b/);
+
+    // Toggle to dark mode
+    await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'dark'));
+    await expect(page.locator('.monaco-editor')).toHaveClass(/vs-dark/);
   });
 
   test('prev/next navigation', async ({ page }) => {

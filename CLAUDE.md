@@ -62,4 +62,4 @@ See `ARCHITECTURE.md` for detailed decisions and rationale.
 
 ## Known Issues
 
-- Test worker has an exports/CJS plumbing issue — user code execution doesn't work yet. Needs simplification.
+- None currently. Test worker CJS plumbing extracted to `src/lib/module-resolver.ts`.

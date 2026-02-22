@@ -39,12 +39,15 @@ const { prev, next } = getNeighbors(challengeSlugs, challenge.id);
   <!-- Server-rendered description for SEO; React component reads via DOM -->
   <template id="challenge-description"><Content /></template>
 
-  <ChallengeWorkspace
-    client:only="react"
-    slug={challenge.id}
-    starterCode={starterCode}
-    testCode={testCode}
-  />
+  <div class="workspace-loading" id="workspace-container">
+    <div class="workspace-placeholder">Loading editor...</div>
+    <ChallengeWorkspace
+      client:only="react"
+      slug={challenge.id}
+      starterCode={starterCode}
+      testCode={testCode}
+    />
+  </div>
 </Layout>
 
 <style>
@@ -58,4 +61,17 @@ const { prev, next } = getNeighbors(challengeSlugs, challenge.id);
 
   .challenge-nav a { color: var(--color-accent); text-decoration: none; }
   .challenge-nav a:hover { text-decoration: underline; }
+
+  /* Hide serialized props from client:only before hydration */
+  .workspace-loading astro-island > code { display: none; }
+  .workspace-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: calc(100vh - 110px);
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+  }
+  /* Hide placeholder once React mounts */
+  .workspace-loading:has([data-testid="editor"]) .workspace-placeholder { display: none; }
 </style>

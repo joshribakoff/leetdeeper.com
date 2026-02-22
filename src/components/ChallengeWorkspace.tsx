@@ -39,6 +39,7 @@ function useIsMobile(breakpoint = 768) {
 
 export default function ChallengeWorkspace({ slug, starterCode, testCode }: Props) {
   const [descriptionHtml, setDescriptionHtml] = useState('');
+  const [hintHtml, setHintHtml] = useState('');
   const [results, setResults] = useState<TestResult[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [running, setRunning] = useState(false);
@@ -53,16 +54,16 @@ export default function ChallengeWorkspace({ slug, starterCode, testCode }: Prop
   const containerRef = useRef<HTMLDivElement>(null);
   const workerRef = useRef<Worker | null>(null);
 
-  // Read server-rendered description from DOM template
+  // Read server-rendered description from DOM template, extract hint section
   useEffect(() => {
     const tpl = document.getElementById('challenge-description') as HTMLTemplateElement | null;
-    if (tpl) {
-      let html = tpl.innerHTML;
-      // Wrap ## Hint sections in <details> so they're hidden by default
-      html = html.replace(
-        /(<h2[^>]*>Hint<\/h2>)([\s\S]*?)(?=<h2|$)/gi,
-        '<details class="hint-details"><summary>Show Hint</summary>$2</details>'
-      );
+    if (!tpl) return;
+    const html = tpl.innerHTML;
+    const hintMatch = html.match(/<h2[^>]*>Hint<\/h2>([\s\S]*?)(?=<h2|$)/i);
+    if (hintMatch) {
+      setDescriptionHtml(html.slice(0, hintMatch.index));
+      setHintHtml(hintMatch[1]);
+    } else {
       setDescriptionHtml(html);
     }
   }, []);
@@ -165,7 +166,15 @@ export default function ChallengeWorkspace({ slug, starterCode, testCode }: Prop
   const allPass = results?.every((r) => r.pass);
 
   const descriptionPanel = (
-    <div className="prose" style={styles.panelContent} dangerouslySetInnerHTML={{ __html: descriptionHtml }} />
+    <div className="prose" style={styles.panelContent}>
+      <div dangerouslySetInnerHTML={{ __html: descriptionHtml }} />
+      {hintHtml && (
+        <details className="hint-details">
+          <summary>Show Hint</summary>
+          <div dangerouslySetInnerHTML={{ __html: hintHtml }} />
+        </details>
+      )}
+    </div>
   );
 
   const editorPanel = (

@@ -26,12 +26,25 @@ function useMonacoTheme() {
   return theme;
 }
 
+function useIsMobile(breakpoint = 768) {
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < breakpoint);
+  useEffect(() => {
+    const mq = window.matchMedia(`(max-width: ${breakpoint - 1}px)`);
+    const onChange = () => setIsMobile(mq.matches);
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, [breakpoint]);
+  return isMobile;
+}
+
 export default function ChallengeWorkspace({ slug, starterCode, testCode }: Props) {
   const [descriptionHtml, setDescriptionHtml] = useState('');
   const [results, setResults] = useState<TestResult[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [running, setRunning] = useState(false);
   const monacoTheme = useMonacoTheme();
+  const isMobile = useIsMobile();
+  const [mobileTab, setMobileTab] = useState<'description' | 'editor'>('description');
   const [splitPct, setSplitPct] = useState(() => {
     const saved = localStorage.getItem(LS_SPLIT_KEY);
     return saved ? parseFloat(saved) : 40;
@@ -143,11 +156,91 @@ export default function ChallengeWorkspace({ slug, starterCode, testCode }: Prop
 
   const allPass = results?.every((r) => r.pass);
 
+  const descriptionPanel = (
+    <div className="prose" style={styles.panelContent} dangerouslySetInnerHTML={{ __html: descriptionHtml }} />
+  );
+
+  const editorPanel = (
+    <>
+      <div style={styles.toolbar}>
+        <button onClick={runTests} disabled={running} style={{
+          ...styles.runButton,
+          ...(running ? { opacity: 0.7, cursor: 'wait' } : {}),
+        }}>
+          {running ? 'Running\u2026' : 'Run Tests'}
+        </button>
+        <span style={styles.shortcutHint}>Ctrl+Enter</span>
+      </div>
+
+      <div style={{ flex: 1, minHeight: 0 }}>
+        <Editor
+          defaultLanguage="typescript"
+          defaultValue={codeRef.current}
+          onChange={onCodeChange}
+          theme={monacoTheme}
+          options={{
+            minimap: { enabled: false },
+            fontSize: 14,
+            fontFamily: "'Fira Code', monospace",
+            padding: { top: 12 },
+            scrollBeyondLastLine: false,
+            automaticLayout: true,
+          }}
+        />
+      </div>
+
+      <div style={styles.results}>
+        {error && <div style={styles.errorBox}>{error}</div>}
+        {results && (
+          <div>
+            <div style={{ ...styles.resultsSummary, color: allPass ? 'var(--color-success)' : 'var(--color-error)' }}>
+              {allPass ? 'All tests passed!' : `${results.filter((r) => r.pass).length}/${results.length} passed`}
+            </div>
+            {results.map((r, i) => (
+              <div key={i} style={{ ...styles.resultRow, background: r.pass ? 'var(--color-success-dim)' : 'var(--color-error-dim)' }}>
+                <span>{r.pass ? '\u2713' : '\u2717'}</span>
+                <span style={{ flex: 1 }}>{r.name}</span>
+                {r.error && <span style={styles.resultError}>{r.error}</span>}
+              </div>
+            ))}
+          </div>
+        )}
+        {!results && !error && <div style={styles.placeholder}>Click "Run Tests" to check your solution</div>}
+      </div>
+    </>
+  );
+
+  if (isMobile) {
+    return (
+      <div ref={containerRef} style={styles.container} data-testid="editor">
+        <div style={styles.mobileWrapper}>
+          <div style={styles.tabBar}>
+            <button
+              style={mobileTab === 'description' ? { ...styles.tab, ...styles.tabActive } : styles.tab}
+              onClick={() => setMobileTab('description')}
+            >
+              Description
+            </button>
+            <button
+              style={mobileTab === 'editor' ? { ...styles.tab, ...styles.tabActive } : styles.tab}
+              onClick={() => setMobileTab('editor')}
+            >
+              Editor
+            </button>
+          </div>
+          <div style={styles.mobilePanel}>
+            {mobileTab === 'description' ? descriptionPanel : editorPanel}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div ref={containerRef} style={styles.container} data-testid="editor">
       {/* Description panel */}
       <div style={{ ...styles.panel, width: `${splitPct}%` }}>
-        <div className="prose" style={styles.panelContent} dangerouslySetInnerHTML={{ __html: descriptionHtml }} />
+        {descriptionPanel}
       </div>
 
       {/* Resize handle */}
@@ -155,52 +248,7 @@ export default function ChallengeWorkspace({ slug, starterCode, testCode }: Prop
 
       {/* Editor panel */}
       <div style={{ ...styles.panel, width: `${100 - splitPct}%`, display: 'flex', flexDirection: 'column' }}>
-        <div style={styles.toolbar}>
-          <button onClick={runTests} disabled={running} style={{
-            ...styles.runButton,
-            ...(running ? { opacity: 0.7, cursor: 'wait' } : {}),
-          }}>
-            {running ? 'Running\u2026' : 'Run Tests'}
-          </button>
-          <span style={styles.shortcutHint}>Ctrl+Enter</span>
-        </div>
-
-        <div style={{ flex: 1, minHeight: 0 }}>
-          <Editor
-            defaultLanguage="typescript"
-            defaultValue={codeRef.current}
-            onChange={onCodeChange}
-            theme={monacoTheme}
-            options={{
-              minimap: { enabled: false },
-              fontSize: 14,
-              fontFamily: "'Fira Code', monospace",
-              padding: { top: 12 },
-              scrollBeyondLastLine: false,
-              automaticLayout: true,
-            }}
-          />
-        </div>
-
-        {/* Test results */}
-        <div style={styles.results}>
-          {error && <div style={styles.errorBox}>{error}</div>}
-          {results && (
-            <div>
-              <div style={{ ...styles.resultsSummary, color: allPass ? 'var(--color-success)' : 'var(--color-error)' }}>
-                {allPass ? 'All tests passed!' : `${results.filter((r) => r.pass).length}/${results.length} passed`}
-              </div>
-              {results.map((r, i) => (
-                <div key={i} style={{ ...styles.resultRow, background: r.pass ? 'var(--color-success-dim)' : 'var(--color-error-dim)' }}>
-                  <span>{r.pass ? '\u2713' : '\u2717'}</span>
-                  <span style={{ flex: 1 }}>{r.name}</span>
-                  {r.error && <span style={styles.resultError}>{r.error}</span>}
-                </div>
-              ))}
-            </div>
-          )}
-          {!results && !error && <div style={styles.placeholder}>Click "Run Tests" to check your solution</div>}
-        </div>
+        {editorPanel}
       </div>
     </div>
   );
@@ -284,5 +332,40 @@ const styles: Record<string, React.CSSProperties> = {
   placeholder: {
     color: 'var(--color-text-muted)',
     fontSize: 13,
+  },
+  mobileWrapper: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    width: '100%',
+    height: '100%',
+  },
+  tabBar: {
+    display: 'flex',
+    borderBottom: '1px solid var(--color-border)',
+    background: 'var(--color-surface)',
+    flexShrink: 0,
+  },
+  tab: {
+    flex: 1,
+    padding: '10px 0',
+    border: 'none',
+    background: 'transparent',
+    color: 'var(--color-text-muted)',
+    fontSize: 14,
+    fontWeight: 600,
+    cursor: 'pointer',
+    borderBottom: '2px solid transparent',
+    transition: 'color 150ms, border-color 150ms',
+  },
+  tabActive: {
+    color: 'var(--color-accent)',
+    borderBottomColor: 'var(--color-accent)',
+  },
+  mobilePanel: {
+    flex: 1,
+    minHeight: 0,
+    overflow: 'auto',
+    display: 'flex',
+    flexDirection: 'column' as const,
   },
 };

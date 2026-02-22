@@ -56,7 +56,15 @@ export default function ChallengeWorkspace({ slug, starterCode, testCode }: Prop
   // Read server-rendered description from DOM template
   useEffect(() => {
     const tpl = document.getElementById('challenge-description') as HTMLTemplateElement | null;
-    if (tpl) setDescriptionHtml(tpl.innerHTML);
+    if (tpl) {
+      let html = tpl.innerHTML;
+      // Wrap ## Hint sections in <details> so they're hidden by default
+      html = html.replace(
+        /(<h2[^>]*>Hint<\/h2>)([\s\S]*?)(?=<h2|$)/gi,
+        '<details class="hint-details"><summary>Show Hint</summary>$2</details>'
+      );
+      setDescriptionHtml(html);
+    }
   }, []);
 
   // Persist split position
